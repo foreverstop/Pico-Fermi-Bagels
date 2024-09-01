@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pico Fermi Bagels 猜数字游戏</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .guess-input {
+            margin: 20px 0;
+        }
+        .clues {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Pico Fermi Bagels 猜数字游戏</h1>
+        <p>我正在想一个3位数的数字。尝试猜猜看是什么。</p>
+        <p>线索：</p>
+        <ul>
+            <li>Pico：一个数字正确但位置不对。</li>
+            <li>Fermi：一个数字正确且位置正确。</li>
+            <li>Bagels：没有数字正确。</li>
+        </ul>
+        <div class="guess-input">
+            <label for="guess">猜测 #<span id="guess-number">1</span>:</label>
+            <input type="text" id="guess" maxlength="3" pattern="[0-9]{3}" required>
+            <button onclick="checkGuess()">提交</button>
+        </div>
+        <div class="clues" id="clues"></div>
+    </div>
+
+    <script>
+        const NUM_DIGITS = 3;
+        const MAX_TRIES = 10;
+        let secretNum = generateSecretNum();
+        let numGuesses = 1;
+
+        function generateSecretNum() {
+            let digits = Array.from({length: 10}, (_, i) => i);
+            digits = shuffle(digits).slice(0, NUM_DIGITS);
+            return digits.join('');
+        }
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function getClues(guess, secretNum) {
+            let clues = [];
+            for (let i = 0; i < guess.length; i++) {
+                if (guess[i] === secretNum[i]) {
+                    clues.push('Fermi');
+                } else if (secretNum.includes(guess[i])) {
+                    clues.push('Pico');
+                }
+            }
+            if (clues.length === 0) {
+                return 'Bagels';
+            }
+            return clues.join(' ');
+        }
+
+        function checkGuess() {
+            const guessInput = document.getElementById('guess');
+            const guess = guessInput.value;
+            if (guess.length !== NUM_DIGITS || !/^\d+$/.test(guess)) {
+                alert('请输入一个有效的3位数字。');
+                return;
+            }
+
+            const clues = getClues(guess, secretNum);
+            const cluesDiv = document.getElementById('clues');
+            cluesDiv.innerHTML += `<p>${clues}</p>`;
+
+            if (guess === secretNum) {
+                alert(`恭喜，你猜对了我的数字 ${secretNum} 在 ${numGuesses} 次尝试中！`);
+                resetGame();
+            } else {
+                numGuesses++;
+                document.getElementById('guess-number').innerText = numGuesses;
+                if (numGuesses > MAX_TRIES) {
+                    alert(`很抱歉，你用完了所有尝试。正确的数字是 ${secretNum}。`);
+                    resetGame();
+                }
+            }
+            guessInput.value = '';
+        }
+
+        function resetGame() {
+            secretNum = generateSecretNum();
+            numGuesses = 1;
+            document.getElementById('guess-number').innerText = numGuesses;
+            document.getElementById('clues').innerHTML = '';
+        }
+    </script>
+</body>
+</html>
